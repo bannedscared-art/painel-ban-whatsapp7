@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Painel Ban</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  background: url("https://i.imgur.com/7YkGZKp.jpg") no-repeat center center fixed;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.painel {
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(6px);
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,255,0,0.2);
+}
+
+h1 {
+  margin: 0;
+  color: #00ff6a; /* VERDE */
+  font-size: 24px;
+}
+
+.sub {
+  margin-top: 6px;
+  margin-bottom: 20px;
+  color: #caffc2;
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  background: #222;
+  color: #fff;
+  font-size: 15px;
+}
+
+button {
+  margin-top: 15px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 6px;
+  border: none;
+  background: #00ff00;
+  color: #000;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* TELA TRAVADA */
+.lock {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.lock h2 {
+  color: red;
+  font-size: 22px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="painel">
+  <h1>Painel da Zennyt Corp</h1>
+  <div class="sub">by vempraluz duban</div>
+
+  <input type="tel" id="numero" placeholder="Passe o Número do WhatsApp">
+  <button id="banir" disabled>ZTC</button>
+</div>
+
+<div class="lock" id="lock">
+  <h2>Processando banimento...</h2>
+</div>
+
+<audio id="audio" src="audio.mp3"></audio>
+
+<script>
+const input = document.getElementById("numero");
+const botao = document.getElementById("banir");
+const lock = document.getElementById("lock");
+const audio = document.getElementById("audio");
+
+input.addEventListener("input", () => {
+  botao.disabled = input.value.trim().length < 8;
+});
+
+botao.addEventListener("click", () => {
+  if (botao.disabled) return;
+
+  lock.style.display = "flex";
+
+  document.documentElement.requestFullscreen?.().catch(()=>{});
+
+  audio.volume = 0.1;
+  audio.play().catch(()=>{});
+
+  audio.onpause = () => audio.play().catch(()=>{});
+
+  const vol = setInterval(() => {
+    if (audio.volume < 1) {
+      audio.volume = Math.min(audio.volume + 0.05, 1);
+    } else {
+      clearInterval(vol);
+    }
+  }, 300);
+
+  const block = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+
+  document.addEventListener("keydown", block);
+  document.addEventListener("contextmenu", block);
+  window.onbeforeunload = () => "Processando...";
+
+  setTimeout(() => {
+    lock.style.display = "none";
+    document.removeEventListener("keydown", block);
+    document.removeEventListener("contextmenu", block);
+    window.onbeforeunload = null;
+  }, 10000);
+});
+</script>
+
+</body>
+</html>
